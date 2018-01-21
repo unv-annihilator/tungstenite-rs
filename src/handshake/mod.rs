@@ -30,15 +30,16 @@ impl<Role: HandshakeRole> MidHandshake<Role> {
         loop {
             mach = match mach.single_round()? {
                 RoundResult::WouldBlock(m) => {
-                    return Err(HandshakeError::Interrupted(MidHandshake { machine: m, ..self }))
+                    return Err(HandshakeError::Interrupted(MidHandshake {
+                        machine: m,
+                        ..self
+                    }))
                 }
                 RoundResult::Incomplete(m) => m,
-                RoundResult::StageFinished(s) => {
-                    match self.role.stage_finished(s)? {
-                        ProcessingResult::Continue(m) => m,
-                        ProcessingResult::Done(result) => return Ok(result),
-                    }
-                }
+                RoundResult::StageFinished(s) => match self.role.stage_finished(s)? {
+                    ProcessingResult::Continue(m) => m,
+                    ProcessingResult::Done(result) => return Ok(result),
+                },
             }
         }
     }
@@ -94,8 +95,10 @@ pub trait HandshakeRole {
     #[doc(hidden)]
     type FinalResult;
     #[doc(hidden)]
-    fn stage_finished(&mut self, finish: StageResult<Self::IncomingData, Self::InternalStream>)
-        -> Result<ProcessingResult<Self::InternalStream, Self::FinalResult>, Error>;
+    fn stage_finished(
+        &mut self,
+        finish: StageResult<Self::IncomingData, Self::InternalStream>,
+    ) -> Result<ProcessingResult<Self::InternalStream, Self::FinalResult>, Error>;
 }
 
 /// Stage processing result.
@@ -124,8 +127,10 @@ mod tests {
     #[test]
     fn key_conversion() {
         // example from RFC 6455
-        assert_eq!(convert_key(b"dGhlIHNhbXBsZSBub25jZQ==").unwrap(),
-                               "s3pPLMBiTxaQ9kYGzzhZRbK+xOo=");
+        assert_eq!(
+            convert_key(b"dGhlIHNhbXBsZSBub25jZQ==").unwrap(),
+            "s3pPLMBiTxaQ9kYGzzhZRbK+xOo="
+        );
     }
 
 }
